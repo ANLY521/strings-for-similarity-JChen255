@@ -1,6 +1,54 @@
-from scipy.stats import pearsonr
-import argparse
+from nltk import word_tokenize
+from nltk import edit_distance
+from nltk.translate.nist_score import sentence_nist
+from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
+from difflib import get_close_matches
 from util import parse_sts
+import argparse
+import numpy as np
+from scipy.stats import pearsonr
+
+def symmetrical_nist(text_pair):
+    t1,t2 = text_pair
+    t1_toks = word_tokenize(t1.lower())
+    t2_toks = word_tokenize(t2.lower())
+    try:
+        nist_1 = sentence_nist([t1_toks, ], t2_toks)
+    except ZeroDivisionError:
+        nist_1 = 0.0
+    try:
+        nist_2 = sentence_nist([t2_toks, ], t1_toks)
+    except ZeroDivisionError:
+        nist_2 = 0.0
+    return nist_1 + nist_2
+
+def symmetrical_bleu(text_pair):
+    t1,t2 = text_pair
+    t1_toks = word_tokenize(t1.lower())
+    t2_toks = word_tokenize(t2.lower())
+    try:
+        bleu_1 = sentence_bleu([t1_toks, ], t2_toks,  smoothing_function=SmoothingFunction().method0)
+    except ZeroDivisionError:
+        bleu_1 = 0.0
+    try:
+        bleu_2 = sentence_bleu([t2_toks, ], t1_toks, smoothing_function=SmoothingFunction().method0)
+    except ZeroDivisionError:
+        bleu_2 = 0.0
+    return bleu_1 + bleu_2
+
+def symmetrical_ed(text_pair):
+    t1,t2 = text_pair
+    t1_toks = word_tokenize(t1.lower())
+    t2_toks = word_tokenize(t2.lower())
+    try:
+        ed_1 = edit_distance(t1_toks, t2_toks)
+    except ZeroDivisionError:
+        ed_1 = 0.0
+    try:
+        ed_2 = edit_distance(t2_toks, t1_toks)
+    except ZeroDivisionError:
+        ed_2 = 0.0
+    return ed_1 + ed_2
 
 
 def main(sts_data):
@@ -15,14 +63,46 @@ def main(sts_data):
     # TODO 2: Calculate each of the the metrics here for each text pair in the dataset
     # HINT: Longest common substring can be complicated. Investigate difflib.SequenceMatcher for a good option.
     score_types = ["NIST", "BLEU", "Word Error Rate", "Longest common substring", "Edit Distance"]
+    sample_text1 = texts
+    sample_labels1 = labels
+    sample_data1= zip(sample_labels1, sample_text1)
+
+    sample_text2 = texts
+    sample_labels2 = labels
+    sample_data2= zip(sample_labels2, sample_text2)
+
+    sample_text3 = texts
+    sample_labels3 = labels
+    sample_data3= zip(sample_labels3, sample_text3)
+
+    nist_scores = []
+    for label,text_pair in sample_data1:
+        nist_total = symmetrical_nist(text_pair)
+        nist_scores.append(nist_total)
+
+    bleu_scores = []
+    for label,text_pair in sample_data2:
+        bleu_total = symmetrical_bleu(text_pair)
+        bleu_scores.append(bleu_total)
+
+    ed_scores = []
+    for label,text_pair in sample_data3:
+        ed_total = symmetrical_ed(text_pair)
+        ed_scores.append(ed_total)
+
+    nist_corr, _ = pearsonr(nist_scores, sample_labels1)
+    bleu_corr, _ = pearsonr(bleu_scores, sample_labels2)
+    ed_corr, _ = pearsonr(ed_scores, sample_labels3)
 
     #TODO 3: Calculate pearson r between each metric and the STS labels and report in the README.
     # Sample code to print results. You can alter the printing as you see fit. It is most important to put the results
     # in a table in the README
-    print(f"Semantic textual similarity for {sts_data}\n")
-    for metric_name in score_types:
-        score = 0.0
-        print(f"{metric_name} correlation: {score:.03f}")
+    print(f"\nSemantic textual similarity for {sts_data}\n")
+    print(f"Nist correlation: {nist_corr:.03f}")
+    print(f"BLEU correlation: {bleu_corr:.03f}")
+    #print(f"Word Error Rate correlation: {nist_corr:.03f}")
+    #print(f"Longest common substring correlation: {lcs_corr:.03f}")
+    print(f"Edit Distance correlation: {ed_corr:.03f}")
 
     # TODO 4: Complete writeup as specified by TODOs in README (describe metrics; show usage)
 
