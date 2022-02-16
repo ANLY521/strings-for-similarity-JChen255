@@ -1,7 +1,7 @@
 from nltk import word_tokenize
 from nltk.translate.nist_score import sentence_nist
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
-from jiwer import wer
+from nltk import edit_distance
 from difflib import SequenceMatcher
 from Levenshtein import distance
 from util import parse_sts
@@ -56,11 +56,11 @@ def symmetrical_wer(text_pair):
     t1_toks = t1.lower()
     t2_toks = t2.lower()
     try:
-        wer_1 = wer(t1_toks, t2_toks)
+        wer_1 = (edit_distance(t1_toks, t2_toks))/max(len(t2_toks),len(t1_toks))
     except ZeroDivisionError:
         wer_1 = 0.0
     try:
-        wer_2 = wer(t2_toks, t1_toks)
+        wer_2 = (edit_distance(t2_toks, t1_toks))/min(len(t2_toks),len(t1_toks))
     except ZeroDivisionError:
         wer_2 = 0.0
     return wer_1 + wer_2
@@ -70,11 +70,15 @@ def symmetrical_lcs(text_pair):
     t1_toks = t1.lower()
     t2_toks = t2.lower()
     try:
-        lcs_1 = SequenceMatcher(lambda x: x == " ", t1_toks, t2_toks).ratio()
+        seqMatch1 = SequenceMatcher(None, t1_toks, t2_toks)
+        match1 = seqMatch1.find_longest_match(0, len(t1_toks), 0, len(t2_toks))
+        lcs_1 = match1.size
     except ZeroDivisionError:
         lcs_1 = 0.0
     try:
-        lcs_2 = SequenceMatcher(lambda x: x == " ",t2_toks, t1_toks).ratio()
+        seqMatch2 = SequenceMatcher(None, t2_toks, t1_toks)
+        match2 = seqMatch2.find_longest_match(0, len(t2_toks), 0, len(t1_toks))
+        lcs_2 = match2.size
     except ZeroDivisionError:
         lcs_2 = 0.0
     return lcs_1 + lcs_2
@@ -158,7 +162,7 @@ def main(sts_data):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--sts_data", type=str, default="stsbenchmark/sts-train.csv",
+    parser.add_argument("--sts_data", type=str, default="stsbenchmark/sts-test.csv",
                         help="tab separated sts data in benchmark format")
     args = parser.parse_args()
 
