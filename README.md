@@ -9,11 +9,17 @@ Data is from the [STS benchmark](http://ixa2.si.ehu.es/stswiki/index.php/STSbenc
 
 **TODO:**
 Describe each metric in ~ 1 sentence
-1. NIST: 
-2. BLEU:
-3. Word Error Rate:
-4. Longest Common Substring:
-5. Edit Distance:
+1. BLEU: A metric to evaluate the machine-translation quality 
+         by calculating n-gram precision adding equal weight to each one.
+2. NIST: Based on BLEU metric, NIST also evaluates the machine-translation quality, which not only 
+         calculates n-gram precision adding equal weight to each one, but also how informative each n-gram is.
+3. Word Error Rate: A metric to evaluate the machine-translation or speech recognition quality through calculating
+                    the ratio between the number of substitutions, deletions, insertions, and the total number
+                    of words.
+4. Longest Common Substring: A metric that can evaluate semantic textual similarity by calculating the longest
+                             string which is a substring of two or more strings.
+5. Edit Distance: A metric that can evaluate semantic textual similarity by calculating the smallest steps will be taken
+                  to transform a string to another.
 
 **TODO:** Fill in the correlations. Expected output for DEV is provided; it is ok if your actual result
 varies slightly due to preprocessing/system difference, but the difference should be quite small.
@@ -30,7 +36,9 @@ Edit Dist | (0.033) | -0.175| (-0.039)
 
 **TODO:**
 Show usage of the homework script with command line flags (see example under lab, week 1).
-
+1.`python sts_pearson.py --sts_data stsbenchmark/sts-dev.csv`
+2.`python sts_pearson.py --sts_data stsbenchmark/sts-train.csv`
+3.`python sts_pearson.py --sts_data stsbenchmark/sts-test.csv`
 
 ## lab, week 1: sts_nist.py
 
