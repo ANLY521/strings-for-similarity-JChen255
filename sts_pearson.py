@@ -1,7 +1,9 @@
 from nltk import word_tokenize
-from nltk import edit_distance
+from Levenshtein import distance
 from nltk.translate.nist_score import sentence_nist
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
+import
+
 from difflib import get_close_matches
 from util import parse_sts
 import argparse
@@ -38,14 +40,14 @@ def symmetrical_bleu(text_pair):
 
 def symmetrical_ed(text_pair):
     t1,t2 = text_pair
-    t1_toks = word_tokenize(t1.lower())
-    t2_toks = word_tokenize(t2.lower())
+    t1_toks = t1.lower()
+    t2_toks = t2.lower()
     try:
-        ed_1 = edit_distance(t1_toks, t2_toks)
+        ed_1 = distance(t1_toks, t2_toks)
     except ZeroDivisionError:
         ed_1 = 0.0
     try:
-        ed_2 = edit_distance(t2_toks, t1_toks)
+        ed_2 = distance(t2_toks, t1_toks)
     except ZeroDivisionError:
         ed_2 = 0.0
     return ed_1 + ed_2
