@@ -1,10 +1,9 @@
 from nltk import word_tokenize
-from Levenshtein import distance
 from nltk.translate.nist_score import sentence_nist
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
-import
-
-from difflib import get_close_matches
+from jiwer import wer
+from difflib import SequenceMatcher
+from Levenshtein import distance
 from util import parse_sts
 import argparse
 import numpy as np
@@ -52,6 +51,34 @@ def symmetrical_ed(text_pair):
         ed_2 = 0.0
     return ed_1 + ed_2
 
+def symmetrical_wer(text_pair):
+    t1,t2 = text_pair
+    t1_toks = t1.lower()
+    t2_toks = t2.lower()
+    try:
+        wer_1 = wer(t1_toks, t2_toks)
+    except ZeroDivisionError:
+        wer_1 = 0.0
+    try:
+        wer_2 = wer(t2_toks, t1_toks)
+    except ZeroDivisionError:
+        wer_2 = 0.0
+    return wer_1 + wer_2
+
+def symmetrical_lcs(text_pair):
+    t1,t2 = text_pair
+    t1_toks = t1.lower()
+    t2_toks = t2.lower()
+    try:
+        lcs_1 = SequenceMatcher(lambda x: x == " ", t1_toks, t2_toks).ratio()
+    except ZeroDivisionError:
+        lcs_1 = 0.0
+    try:
+        lcs_2 = SequenceMatcher(lambda x: x == " ",t2_toks, t1_toks).ratio()
+    except ZeroDivisionError:
+        lcs_2 = 0.0
+    return lcs_1 + lcs_2
+
 
 def main(sts_data):
     """Calculate pearson correlation between semantic similarity scores and string similarity metrics.
@@ -77,6 +104,15 @@ def main(sts_data):
     sample_labels3 = labels
     sample_data3= zip(sample_labels3, sample_text3)
 
+    sample_text4 = texts
+    sample_labels4 = labels
+    sample_data4= zip(sample_labels4, sample_text4)
+
+    sample_text5 = texts
+    sample_labels5 = labels
+    sample_data5= zip(sample_labels5, sample_text5)
+
+
     nist_scores = []
     for label,text_pair in sample_data1:
         nist_total = symmetrical_nist(text_pair)
@@ -92,9 +128,21 @@ def main(sts_data):
         ed_total = symmetrical_ed(text_pair)
         ed_scores.append(ed_total)
 
+    wer_scores = []
+    for label,text_pair in sample_data4:
+        wer_total = symmetrical_wer(text_pair)
+        wer_scores.append(wer_total)
+
+    lcs_scores = []
+    for label,text_pair in sample_data5:
+        lcs_total = symmetrical_lcs(text_pair)
+        lcs_scores.append(lcs_total)
+
     nist_corr, _ = pearsonr(nist_scores, sample_labels1)
     bleu_corr, _ = pearsonr(bleu_scores, sample_labels2)
     ed_corr, _ = pearsonr(ed_scores, sample_labels3)
+    wer_corr, _ = pearsonr(wer_scores, sample_labels4)
+    lcs_corr, _ = pearsonr(lcs_scores, sample_labels5)
 
     #TODO 3: Calculate pearson r between each metric and the STS labels and report in the README.
     # Sample code to print results. You can alter the printing as you see fit. It is most important to put the results
@@ -102,15 +150,15 @@ def main(sts_data):
     print(f"\nSemantic textual similarity for {sts_data}\n")
     print(f"Nist correlation: {nist_corr:.03f}")
     print(f"BLEU correlation: {bleu_corr:.03f}")
-    #print(f"Word Error Rate correlation: {nist_corr:.03f}")
-    #print(f"Longest common substring correlation: {lcs_corr:.03f}")
+    print(f"Word Error Rate correlation: {wer_corr:.03f}")
+    print(f"Longest common substring correlation: {lcs_corr:.03f}")
     print(f"Edit Distance correlation: {ed_corr:.03f}")
 
     # TODO 4: Complete writeup as specified by TODOs in README (describe metrics; show usage)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--sts_data", type=str, default="stsbenchmark/sts-dev.csv",
+    parser.add_argument("--sts_data", type=str, default="stsbenchmark/sts-train.csv",
                         help="tab separated sts data in benchmark format")
     args = parser.parse_args()
 
