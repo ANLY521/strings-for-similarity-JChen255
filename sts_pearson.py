@@ -53,14 +53,16 @@ def symmetrical_ed(text_pair):
 
 def symmetrical_wer(text_pair):
     t1,t2 = text_pair
-    t1_toks = t1.lower()
-    t2_toks = t2.lower()
+    t1_lower = t1.lower()
+    t2_lower = t2.lower()
+    t1_toks = word_tokenize(t1_lower)
+    t2_toks = word_tokenize(t2_lower)
     try:
-        wer_1 = (edit_distance(t1_toks, t2_toks))/max(len(t2_toks),len(t1_toks))
+        wer_1 = (edit_distance(t1_lower, t2_lower))/max(len(t2_toks),len(t1_toks))
     except ZeroDivisionError:
         wer_1 = 0.0
     try:
-        wer_2 = (edit_distance(t2_toks, t1_toks))/min(len(t2_toks),len(t1_toks))
+        wer_2 = (edit_distance(t2_lower, t1_lower))/min(len(t2_toks),len(t1_toks))
     except ZeroDivisionError:
         wer_2 = 0.0
     return wer_1 + wer_2
